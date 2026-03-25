@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>СТРОЙ / УБИВАЙ</title>
+    <style>
+        :root {
+            --primary: #67e8f9;
+            --secondary: #10b981;
+            --bg-dark: #071522;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at 50% 0%, #15395b 0%, var(--bg-dark) 70%, #040c14 100%);
+            color: #e0f7ff;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* --- ЧАСТИЦЫ НА ФОНЕ --- */
+        .particles {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            bottom: -40px;
+            left: var(--left);
+            width: var(--size);
+            height: var(--size);
+            background: radial-gradient(circle at 30% 30%, rgba(103,232,249,1), rgba(16,185,129,0.8) 50%, transparent 80%);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(103,232,249,0.8), 0 0 40px rgba(16,185,129,0.5);
+            opacity: 0;
+            animation: rise var(--duration) linear forwards;
+            animation-delay: var(--delay);
+            filter: blur(1px);
+        }
+
+        @keyframes rise {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            10% { opacity: 0.8; }
+            80% { opacity: 0.8; }
+            100% { transform: translateY(-110vh) scale(0.2); opacity: 0; }
+        }
+
+        /* --- КНОПКА ПЕРЕКЛЮЧЕНИЯ ДИЗАЙНА --- */
+        .layout-toggle-wrapper {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
+        }
+
+        .toggle-btn {
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border: 1px solid rgba(103, 232, 249, 0.4);
+            background: rgba(7, 21, 34, 0.6);
+            backdrop-filter: blur(8px);
+            transition: all 0.3s;
+        }
+
+        .toggle-btn:hover {
+            background: rgba(103, 232, 249, 0.15);
+            box-shadow: 0 0 15px rgba(103, 232, 249, 0.3);
+            transform: scale(1.05);
+        }
+
+        /* --- ОБЩИЙ СТИЛЬ СТЕКЛА --- */
+        .glass-btn {
+            background: rgba(15, 43, 71, 0.4);
+            border: 1px solid rgba(103, 232, 249, 0.2);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+        }
+
+        .glass-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(800px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(103, 232, 249, 0.15), transparent 40%);
+            z-index: 0;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .glass-btn:hover::before { opacity: 1; }
+        .glass-btn:hover {
+            border-color: rgba(103, 232, 249, 0.6);
+            box-shadow: 0 10px 30px rgba(103, 232, 249, 0.25), 0 0 15px rgba(16, 185, 129, 0.2) inset;
+        }
+
+        .content-relative { position: relative; z-index: 2; }
+
+        /* --- АНИМАЦИИ ПОЯВЛЕНИЯ --- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- ОБОЛОЧКИ МАКЕТОВ --- */
+        .layout-wrapper {
+            display: none;
+            min-height: 100vh;
+            padding: 80px 20px 40px;
+            z-index: 1;
+            position: relative;
+        }
+
+        .layout-wrapper.active {
+            display: flex;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        /* =========================================================
+           ВАРИАНТ 1: ЦЕНТРИРОВАННЫЙ ДИЗАЙН (ТЕКУЩИЙ)
+           ========================================================= */
+        #layout-centered {
+            flex-direction: column;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            gap: 2.5rem;
+        }
+
+        .main-title-center {
+            font-size: clamp(3rem, 8vw, 7rem);
+            font-weight: 900;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            background: linear-gradient(110deg, #fff, var(--primary), var(--secondary), var(--primary), #fff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 300% auto;
+            animation: textShine 6s linear infinite;
+            filter: drop-shadow(0 0 20px rgba(103, 232, 249, 0.4));
+            text-align: center;
+        }
+
+        @keyframes textShine { 0% { background-position: 0% center; } 100% { background-position: 300% center; } }
+
+        .c-hot-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; width: 100%; }
+        
+        .c-hot-btn {
+            padding: 1rem 2rem; border-radius: 16px; font-size: 1.1rem; font-weight: 700;
+            display: flex; align-items: center; gap: 12px; text-transform: uppercase;
+        }
+        .c-hot-btn:hover { transform: translateY(-5px); background: rgba(16, 185, 129, 0.1); }
+        .c-hot-btn svg { width: 24px; height: 24px; transition: 0.3s; }
+        .c-hot-btn:hover svg { transform: scale(1.15) rotate(5deg); filter: drop-shadow(0 0 10px var(--primary)); }
+
+        .c-separator {
+            width: 100%; max-width: 800px; height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(103, 232, 249, 0.4), transparent);
+            position: relative; margin: 1rem 0;
+        }
+        .c-separator::before {
+            content: attr(data-text); position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); background: var(--bg-dark);
+            padding: 0 15px; font-weight: 800; color: var(--primary); letter-spacing: 2px;
+        }
+
+        .c-sites-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; max-width: 900px; width: 100%; }
+        
+        .site-card {
+            border-radius: 20px; padding: 1.5rem; display: flex; align-items: center; gap: 1.2rem; text-align: left;
+        }
+        .site-card:hover { transform: translateY(-5px) scale(1.02); }
+        .site-icon {
+            width: 55px; height: 55px; border-radius: 12px; background: rgba(103, 232, 249, 0.1);
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.3s;
+        }
+        .site-card:hover .site-icon { background: var(--primary); color: var(--bg-dark); box-shadow: 0 0 15px var(--primary); transform: scale(1.1) rotate(-5deg); }
+        .site-info h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.3rem; }
+        .site-info p { font-size: 0.9rem; color: rgba(224, 247, 255, 0.6); line-height: 1.4; }
+
+        .c-cmd-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 2rem; }
+        .cmd-circle { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .cmd-circle svg { width: 32px; height: 32px; transition: 0.3s; }
+        .cmd-circle:hover { transform: translateY(-10px) scale(1.1); background: rgba(16, 185, 129, 0.15); }
+        .cmd-circle:hover svg { filter: drop-shadow(0 0 10px var(--primary)); }
+        
+        .cmd-circle::after {
+            content: attr(data-tooltip); position: absolute; bottom: calc(100% + 15px); left: 50%;
+            transform: translateX(-50%) translateY(10px); background: rgba(7, 21, 34, 0.9);
+            border: 1px solid var(--primary); color: #fff; padding: 8px 14px; border-radius: 8px;
+            font-size: 0.9rem; font-weight: 700; white-space: nowrap; pointer-events: none; opacity: 0; visibility: hidden; transition: 0.3s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 10;
+        }
+        .cmd-circle:hover::after { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+
+
+        /* =========================================================
+           ВАРИАНТ 2: ДАШБОРД (ПРОШЛЫЙ)
+           ========================================================= */
+        #layout-dashboard {
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .d-grid {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 2.5rem;
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        .d-hot-panel {
+            border-radius: 24px; padding: 2.5rem 2rem; display: flex; flex-direction: column;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5); height: 100%;
+        }
+
+        .d-title { font-size: 2.5rem; font-weight: 900; letter-spacing: 1px; margin-bottom: 0.5rem; }
+        .d-title span { color: var(--primary); }
+        .d-subtitle { color: rgba(224, 247, 255, 0.6); font-size: 0.95rem; line-height: 1.5; margin-bottom: 2.5rem; }
+
+        .d-actions { display: flex; flex-direction: column; gap: 1rem; margin-top: auto; }
+        .d-hot-btn {
+            border-radius: 16px; padding: 1.2rem; display: flex; align-items: center; justify-content: center; gap: 12px; font-weight: 700; text-transform: uppercase;
+        }
+        .d-hot-btn:hover { transform: translateY(-5px); background: rgba(16, 185, 129, 0.15); }
+        .d-hot-btn svg { width: 24px; height: 24px; transition: 0.3s; }
+        .d-hot-btn:hover svg { transform: scale(1.1) rotate(5deg); filter: drop-shadow(0 0 8px var(--primary)); }
+
+        .d-content { display: flex; flex-direction: column; gap: 2.5rem; }
+        .d-section-title {
+            font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;
+            color: var(--primary); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 15px;
+        }
+        .d-section-title::after { content: ''; flex-grow: 1; height: 1px; background: linear-gradient(90deg, rgba(103, 232, 249, 0.3), transparent); }
+
+        .d-sites-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+        .d-cmd-row { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+
+        @media (max-width: 968px) {
+            .d-grid { grid-template-columns: 1fr; }
+        }
+
+        /* --- ВЫПАДАЮЩЕЕ МЕНЮ ДОНАТА --- */
+        .donate-menu {
+            position: absolute;
+            background: rgba(7, 21, 34, 0.95);
+            border: 1px solid var(--primary);
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            padding: 12px;
+            z-index: 10000;
+            min-width: 260px;
+            backdrop-filter: blur(16px);
+            opacity: 0; visibility: hidden;
+            transform: scale(0.9) translateY(-10px);
+            transition: all 0.3s ease;
+        }
+        .donate-menu.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
+        .menu-item {
+            padding: 12px 16px; margin: 6px 0 0; border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03); display: flex; align-items: center; gap: 12px;
+            color: #fff; text-decoration: none; font-weight: 600; transition: 0.2s;
+        }
+        .menu-item:hover { background: rgba(103, 232, 249, 0.1); transform: translateX(5px); }
+    </style>
+</head>
+<body>
+
+    <div class="particles" id="particles"></div>
+
+    <!-- КНОПКА СМЕНЫ ДИЗАЙНА СЛЕВА СВЕРХУ -->
+    <div class="layout-toggle-wrapper">
+        <button class="toggle-btn" id="layout-toggle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <line x1="9" y1="4" x2="9" y2="20"></line>
+            </svg>
+            Сменить вид
+        </button>
+    </div>
+
+    <!-- ==========================================
+         ВАРИАНТ 1: ЦЕНТРИРОВАННЫЙ 
+         ========================================== -->
+    <div id="layout-centered" class="layout-wrapper active">
+        <h1 class="main-title-center">СТРОЙ/УБИВАЙ</h1>
+
+        <div class="c-hot-row">
+            <a href="steam://connect/79.137.192.234:27015" class="glass-btn c-hot-btn">
+                <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span class="content-relative">ИГРАТЬ</span>
+            </a>
+            <a href="https://discord.gg/RdZnMWxRuR" target="_blank" class="glass-btn c-hot-btn">
+                <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M9 12h.01M15 12h.01M7.5 4.27l-1.5 1.5C4 7 3 9.5 3 12s1 5 3 6.23l1.5 1.5M16.5 4.27l1.5 1.5C20 7 21 9.5 21 12s-1 5-3 6.23l-1.5 1.5M10.5 19.5h3"></path></svg>
+                <span class="content-relative">ДИСКОРД</span>
+            </a>
+            <div style="position: relative;">
+                <div class="glass-btn c-hot-btn" id="donate-btn-c">
+                    <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle></svg>
+                    <span class="content-relative">ДОНАТ</span>
+                </div>
+                <div class="donate-menu" id="donate-menu-c">
+                    <a href="https://gm-donate.net/donate/19198" target="_blank" class="menu-item">🌐 Донат через сайт</a>
+                    <a href="https://stroiubivai.ucoz.net/cmd/donate.html" class="menu-item">🎮 Меню доната в игре</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="c-separator" data-text="САЙТЫ"></div>
+
+        <div class="c-sites-grid">
+            <a href="https://stroiubivai.ucoz.net/information.html" class="glass-btn site-card">
+                <div class="site-icon content-relative"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></div>
+                <div class="site-info content-relative">
+                    <h3>Информация</h3>
+                    <p>Базовые механики, фишки режима и ответы на вопросы.</p>
+                </div>
+            </a>
+            <a href="https://stroiubivai.ucoz.net/rules.html" class="glass-btn site-card">
+                <div class="site-icon content-relative"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div>
+                <div class="site-info content-relative">
+                    <h3>Правила сервера</h3>
+                    <p>Свод законов. Обязательно к прочтению.</p>
+                </div>
+            </a>
+            <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3376916836" target="_blank" class="glass-btn site-card">
+                <div class="site-icon content-relative"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></div>
+                <div class="site-info content-relative">
+                    <h3>Контент сервера</h3>
+                    <p>Коллекция в Steam Workshop (устраняет ERROR).</p>
+                </div>
+            </a>
+            <a href="https://stroiubivai.ucoz.net/kontakts.html" class="glass-btn site-card">
+                <div class="site-icon content-relative"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></div>
+                <div class="site-info content-relative">
+                    <h3>Контакты</h3>
+                    <p>Связь с создателями проекта.</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="c-separator" data-text="ИГРОВЫЕ КОМАНДЫ"></div>
+
+        <div class="c-cmd-row">
+            <a href="https://stroiubivai.ucoz.net/cmd/build.html" class="glass-btn cmd-circle" data-tooltip="Перейти в Билд">
+                <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            </a>
+            <a href="https://stroiubivai.ucoz.net/cmd/pvp.html" class="glass-btn cmd-circle" data-tooltip="Перейти в ПВП">
+                <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"></path><path d="M13 19l6-6"></path><path d="M16 16l4 4"></path><path d="M19 21l2-2"></path></svg>
+            </a>
+            <a href="https://stroiubivai.ucoz.net/cmd/ps_shop.html" class="glass-btn cmd-circle" data-tooltip="Открыть PointShop">
+                <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+            </a>
+            <a href="https://stroiubivai.ucoz.net/cmd/menuon.html" class="glass-btn cmd-circle" data-tooltip="Настройки Сервера">
+                <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </a>
+        </div>
+    </div>
+
+
+    <!-- ==========================================
+         ВАРИАНТ 2: ДАШБОРД (ПАНЕЛЬ СЛЕВА)
+         ========================================== -->
+    <div id="layout-dashboard" class="layout-wrapper">
+        <div class="d-grid">
+            
+            <aside class="glass-btn d-hot-panel" style="cursor: default;">
+                <h1 class="d-title content-relative">СТРОЙ<span>/</span>УБИВАЙ</h1>
+                <p class="d-subtitle content-relative">Официальный Garry's Mod сервер. Выживай, строй базу, защищайся от врагов и доминируй.</p>
+
+                <div class="d-actions content-relative">
+                    <a href="steam://connect/79.137.192.234:27015" class="glass-btn d-hot-btn">
+                        <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        <span class="content-relative">ИГРАТЬ НА СЕРВЕРЕ</span>
+                    </a>
+                    
+                    <a href="https://discord.gg/RdZnMWxRuR" target="_blank" class="glass-btn d-hot-btn">
+                        <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M9 12h.01M15 12h.01M7.5 4.27l-1.5 1.5C4 7 3 9.5 3 12s1 5 3 6.23l1.5 1.5M16.5 4.27l1.5 1.5C20 7 21 9.5 21 12s-1 5-3 6.23l-1.5 1.5M10.5 19.5h3"></path></svg>
+                        <span class="content-relative">НАШ ДИСКОРД</span>
+                    </a>
+
+                    <div style="position: relative;">
+                        <div class="glass-btn d-hot-btn" id="donate-btn-d">
+                            <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle></svg>
+                            <span class="content-relative">ПОДДЕРЖАТЬ ПРОЕКТ</span>
+                        </div>
+                        <div class="donate-menu" id="donate-menu-d">
+                            <a href="https://gm-donate.net/donate/19198" target="_blank" class="menu-item">🌐 Донат через сайт</a>
+                            <a href="https://stroiubivai.ucoz.net/cmd/donate.html" class="menu-item">🎮 Меню доната в игре</a>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="d-content">
+                <div>
+                    <div class="d-section-title">Разделы сайта</div>
+                    <div class="d-sites-grid">
+                        <a href="https://stroiubivai.ucoz.net/information.html" class="glass-btn site-card">
+                            <div class="site-icon content-relative"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></div>
+                            <div class="site-info content-relative">
+                                <h3>Информация</h3>
+                                <p>Базовые механики, фишки режима и ответы на самые частые вопросы.</p>
+                            </div>
+                        </a>
+                        <a href="https://stroiubivai.ucoz.net/rules.html" class="glass-btn site-card">
+                            <div class="site-icon content-relative"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div>
+                            <div class="site-info content-relative">
+                                <h3>Правила сервера</h3>
+                                <p>Свод законов. Обязательно к прочтению.</p>
+                            </div>
+                        </a>
+                        <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3376916836" target="_blank" class="glass-btn site-card">
+                            <div class="site-icon content-relative"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></div>
+                            <div class="site-info content-relative">
+                                <h3>Контент сервера</h3>
+                                <p>Коллекция Steam Workshop. Скачай, чтобы не было ERROR.</p>
+                            </div>
+                        </a>
+                        <a href="https://stroiubivai.ucoz.net/kontakts.html" class="glass-btn site-card">
+                            <div class="site-icon content-relative"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></div>
+                            <div class="site-info content-relative">
+                                <h3>Контакты</h3>
+                                <p>Связь с создателями проекта.</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="d-section-title">Игровые команды</div>
+                    <div class="d-cmd-row">
+                        <a href="https://stroiubivai.ucoz.net/cmd/build.html" class="glass-btn cmd-circle" data-tooltip="Перейти в режим Билда">
+                            <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                        </a>
+                        <a href="https://stroiubivai.ucoz.net/cmd/pvp.html" class="glass-btn cmd-circle" data-tooltip="Перейти в режим ПВП">
+                            <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"></path><path d="M13 19l6-6"></path><path d="M16 16l4 4"></path><path d="M19 21l2-2"></path></svg>
+                        </a>
+                        <a href="https://stroiubivai.ucoz.net/cmd/ps_shop.html" class="glass-btn cmd-circle" data-tooltip="Открыть PointShop (Магазин)">
+                            <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                        </a>
+                        <a href="https://stroiubivai.ucoz.net/cmd/menuon.html" class="glass-btn cmd-circle" data-tooltip="Настройки Сервера">
+                            <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        </a>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+
+    <script>
+        // ЛОГИКА ПЕРЕКЛЮЧЕНИЯ ДИЗАЙНОВ
+        const toggleBtn = document.getElementById('layout-toggle');
+        const layoutCentered = document.getElementById('layout-centered');
+        const layoutDashboard = document.getElementById('layout-dashboard');
+        
+        // Проверяем, есть ли сохраненный выбор в браузере
+        let currentLayout = localStorage.getItem('site_layout') || 'centered';
+
+        function applyLayout() {
+            if (currentLayout === 'centered') {
+                layoutCentered.classList.add('active');
+                layoutDashboard.classList.remove('active');
+            } else {
+                layoutCentered.classList.remove('active');
+                layoutDashboard.classList.add('active');
+            }
+        }
+        applyLayout();
+
+        toggleBtn.addEventListener('click', () => {
+            currentLayout = (currentLayout === 'centered') ? 'dashboard' : 'centered';
+            localStorage.setItem('site_layout', currentLayout); // Сохраняем выбор
+            applyLayout();
+        });
+
+        // ЭФФЕКТ СВЕЧЕНИЯ ЗА МЫШКОЙ (Применяется к обеим версиям)
+        document.querySelectorAll('.glass-btn').forEach(btn => {
+            btn.addEventListener('mousemove', e => {
+                const rect = btn.getBoundingClientRect();
+                btn.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+                btn.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+            });
+        });
+
+        // ЛОГИКА МЕНЮ ДОНАТА ДЛЯ ЦЕНТРИРОВАННОЙ ВЕРСИИ
+        const btnDonateC = document.getElementById('donate-btn-c');
+        const menuDonateC = document.getElementById('donate-menu-c');
+        btnDonateC.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const rect = btnDonateC.getBoundingClientRect();
+            menuDonateC.style.top = (rect.bottom + window.scrollY + 10) + 'px';
+            menuDonateC.style.left = (rect.left + window.scrollX - 40) + 'px'; // Центрируем
+            menuDonateC.classList.toggle('active');
+        });
+
+        // ЛОГИКА МЕНЮ ДОНАТА ДЛЯ ВЕРСИИ ДАШБОРДА
+        const btnDonateD = document.getElementById('donate-btn-d');
+        const menuDonateD = document.getElementById('donate-menu-d');
+        btnDonateD.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const rect = btnDonateD.getBoundingClientRect();
+            menuDonateD.style.top = (rect.bottom + window.scrollY + 10) + 'px';
+            menuDonateD.style.left = (rect.left + window.scrollX) + 'px';
+            menuDonateD.classList.toggle('active');
+        });
+
+        // Закрытие меню доната по клику в пустоту
+        document.addEventListener('click', (e) => {
+            if (!menuDonateC.contains(e.target)) menuDonateC.classList.remove('active');
+            if (!menuDonateD.contains(e.target)) menuDonateD.classList.remove('active');
+        });
+
+        // ЧАСТИЦЫ НА ФОНЕ
+        function createParticle() {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.setProperty('--size', (Math.random() * 8 + 6) + 'px');
+            p.style.setProperty('--left', (Math.random() * 100) + '%');
+            p.style.setProperty('--duration', (Math.random() * 20 + 15) + 's');
+            p.style.setProperty('--delay', (Math.random() * -20) + 's');
+            document.getElementById('particles').appendChild(p);
+            setTimeout(() => { if (p.parentNode) p.parentNode.removeChild(p); }, 36000);
+        }
+        for (let i = 0; i < 25; i++) createParticle();
+        setInterval(createParticle, 600);
+    </script>
+</body>
+</html>
