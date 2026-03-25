@@ -20,13 +20,12 @@
 
         body {
             height: 100vh;
-            overflow: hidden; /* Убираем скролл для десктопа */
+            overflow: hidden;
             background: radial-gradient(circle at 50% 0%, #15395b 0%, var(--bg-dark) 70%, #040c14 100%);
             color: #e0f7ff;
             position: relative;
         }
 
-        /* Адаптив: если экран слишком маленький по высоте, возвращаем скролл */
         @media (max-height: 850px), (max-width: 968px) {
             body { height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
             .layout-wrapper { padding-top: 60px !important; }
@@ -51,19 +50,44 @@
         }
         .toggle-btn:hover { background: rgba(103, 232, 249, 0.15); box-shadow: 0 0 15px rgba(103, 232, 249, 0.3); transform: scale(1.05); }
 
+        /* --- ДИНАМИЧЕСКИЙ GLOW ЭФФЕКТ (МНОГОСЛОЙНЫЙ) --- */
+        @keyframes superGlow {
+            0% {
+                box-shadow: 
+                    0 0 10px rgba(103, 232, 249, 0.3), 
+                    0 0 20px rgba(103, 232, 249, 0.2), 
+                    0 0 30px rgba(16, 185, 129, 0.1), 
+                    inset 0 0 10px rgba(103, 232, 249, 0.1);
+            }
+            100% {
+                box-shadow: 
+                    0 0 15px rgba(103, 232, 249, 0.7), 
+                    0 0 35px rgba(103, 232, 249, 0.5), 
+                    0 0 60px rgba(16, 185, 129, 0.3), 
+                    inset 0 0 20px rgba(103, 232, 249, 0.2);
+            }
+        }
+
         /* --- ОБЩИЙ СТИЛЬ СТЕКЛА --- */
         .glass-btn {
             background: rgba(15, 43, 71, 0.4); border: 1px solid rgba(103, 232, 249, 0.2);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); position: relative; overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-decoration: none; color: inherit; cursor: pointer;
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); position: relative; overflow: visible; /* overflow видимый для тултипов */
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s; 
+            text-decoration: none; color: inherit; cursor: pointer; border-radius: 16px;
         }
+        
+        /* Внутреннее свечение от мыши оставим под контентом */
         .glass-btn::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: inherit;
             background: radial-gradient(800px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(103, 232, 249, 0.15), transparent 40%);
-            z-index: 0; transition: opacity 0.3s ease; opacity: 0; pointer-events: none;
+            z-index: 0; transition: opacity 0.3s ease; opacity: 0; pointer-events: none; overflow: hidden;
         }
         .glass-btn:hover::before { opacity: 1; }
-        .glass-btn:hover { border-color: rgba(103, 232, 249, 0.6); box-shadow: 0 10px 30px rgba(103, 232, 249, 0.25), 0 0 15px rgba(16, 185, 129, 0.2) inset; }
+        
+        .glass-btn:hover { 
+            border-color: rgba(103, 232, 249, 0.8); 
+            animation: superGlow 1.2s infinite alternate ease-in-out;
+        }
         .content-relative { position: relative; z-index: 2; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
@@ -71,55 +95,58 @@
         .layout-wrapper { display: none; height: 100vh; padding: 3vh 20px 2vh; z-index: 1; position: relative; }
         .layout-wrapper.active { display: flex; animation: fadeIn 0.5s ease-out forwards; }
 
+
         /* =========================================================
-           ВАРИАНТ 1: ЦЕНТРИРОВАННЫЙ (УМЕЩАЕТСЯ НА ЭКРАН)
+           РАЗДЕЛИТЕЛИ БЕЗ СВЕЧЕНИЯ И ТЕНЕЙ (ПОЛНЫЙ МИНИМАЛИЗМ)
+           ========================================================= */
+        .neon-divider {
+            display: flex; align-items: center; justify-content: center; width: 100%; max-width: 900px; margin: 1vh 0; gap: 1rem;
+        }
+        .neon-divider .line {
+            height: 1px; flex-grow: 1; background: rgba(103, 232, 249, 0.2);
+        }
+        .neon-divider .text {
+            color: rgba(103, 232, 249, 0.5); font-size: 0.95rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+            background: transparent; padding: 0 1rem; border: none; text-shadow: none; box-shadow: none;
+        }
+
+        .d-section-title { 
+            font-size: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; 
+            color: rgba(103, 232, 249, 0.5); margin-bottom: 1rem; display: flex; align-items: center; gap: 15px; 
+        }
+        .d-section-title::after { content: ''; flex-grow: 1; height: 1px; background: rgba(103, 232, 249, 0.2); }
+
+
+        /* =========================================================
+           ВАРИАНТ 1: ЦЕНТРИРОВАННЫЙ 
            ========================================================= */
         #layout-centered {
             flex-direction: column; align-items: center; justify-content: center;
             max-width: 1300px; margin: 0 auto; gap: 2vh;
         }
 
-        /* Заголовок (уменьшен для компактности) */
         .main-title-center {
             font-size: clamp(2.5rem, 6vw, 5rem); font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase;
             background: linear-gradient(110deg, #fff, var(--primary), var(--secondary), var(--primary), #fff);
             -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-            background-size: 300% auto; animation: textShine 6s linear infinite; filter: drop-shadow(0 0 15px rgba(103, 232, 249, 0.4));
+            background-size: 300% auto; animation: textShine 6s linear infinite; filter: drop-shadow(0 0 15px rgba(103, 232, 249, 0.3));
             text-align: center; margin-bottom: 1vh;
         }
         @keyframes textShine { 0% { background-position: 0% center; } 100% { background-position: 300% center; } }
 
-        /* Горячие кнопки (Горизонтальный ряд) */
         .c-hot-row { display: flex; justify-content: center; gap: 1rem; }
         .c-hot-btn {
             padding: 0.8rem 1.8rem; border-radius: 14px; font-size: 1rem; font-weight: 700;
-            display: flex; align-items: center; gap: 10px; text-transform: uppercase;
+            display: flex; align-items: center; gap: 10px; text-transform: uppercase; overflow: hidden;
         }
-        .c-hot-btn:hover { transform: translateY(-3px); background: rgba(16, 185, 129, 0.1); }
+        .c-hot-btn:hover { transform: translateY(-3px); }
         .c-hot-btn svg { width: 20px; height: 20px; transition: 0.3s; }
         .c-hot-btn:hover svg { transform: scale(1.15) rotate(5deg); filter: drop-shadow(0 0 10px var(--primary)); }
 
-        /* КРАСИВЫЙ РАЗДЕЛИТЕЛЬ С ЗАГОЛОВКОМ */
-        .neon-divider {
-            display: flex; align-items: center; justify-content: center; width: 100%; max-width: 900px; margin: 1vh 0; gap: 1rem;
-        }
-        .neon-divider .line {
-            height: 2px; flex-grow: 1; background: linear-gradient(90deg, transparent, var(--primary), transparent);
-            box-shadow: 0 0 10px var(--primary); opacity: 0.7;
-        }
-        .neon-divider .text {
-            color: var(--primary); font-size: 1.1rem; font-weight: 800; letter-spacing: 3px; text-transform: uppercase;
-            text-shadow: 0 0 10px rgba(103, 232, 249, 0.8); background: rgba(7, 21, 34, 0.8); padding: 0.2rem 1rem;
-            border-radius: 20px; border: 1px solid rgba(103, 232, 249, 0.3);
-        }
-
-        /* Сайты (Горизонтальный ряд карточек) */
-        .c-sites-grid {
-            display: flex; justify-content: center; gap: 1rem; width: 100%; max-width: 1200px; flex-wrap: wrap;
-        }
+        .c-sites-grid { display: flex; justify-content: center; gap: 1rem; width: 100%; max-width: 1200px; flex-wrap: wrap; }
         .site-card {
-            border-radius: 16px; padding: 1rem; display: flex; flex-direction: column; align-items: center;
-            text-align: center; gap: 0.6rem; width: 23%; min-width: 220px;
+            padding: 1rem; display: flex; flex-direction: column; align-items: center;
+            text-align: center; gap: 0.6rem; width: 23%; min-width: 220px; overflow: hidden;
         }
         .site-card:hover { transform: translateY(-4px) scale(1.02); }
         .site-icon {
@@ -130,46 +157,81 @@
         .site-info h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.2rem; }
         .site-info p { font-size: 0.8rem; color: rgba(224, 247, 255, 0.6); line-height: 1.3; }
 
-        /* Команды (Кругляши) */
+
+        /* =========================================================
+           РАЗВЕРНУТЫЕ ТУЛТИПЫ ДЛЯ ИГРОВЫХ КОМАНД
+           ========================================================= */
         .c-cmd-row { display: flex; justify-content: center; gap: 1.5rem; }
         .cmd-circle { width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
         .cmd-circle svg { width: 28px; height: 28px; transition: 0.3s; }
-        .cmd-circle:hover { transform: translateY(-6px) scale(1.1); background: rgba(16, 185, 129, 0.15); }
+        .cmd-circle:hover { transform: translateY(-6px) scale(1.1); }
         .cmd-circle:hover svg { filter: drop-shadow(0 0 10px var(--primary)); }
-        
-        .cmd-circle::after {
-            content: attr(data-tooltip); position: absolute; bottom: calc(100% + 12px); left: 50%;
-            transform: translateX(-50%) translateY(10px); background: rgba(7, 21, 34, 0.95);
-            border: 1px solid var(--primary); color: #fff; padding: 6px 12px; border-radius: 8px;
-            font-size: 0.85rem; font-weight: 700; white-space: nowrap; pointer-events: none; opacity: 0; visibility: hidden; transition: 0.3s;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 10;
+
+        /* Блок подробной подсказки */
+        .cmd-tooltip {
+            position: absolute;
+            bottom: calc(100% + 15px);
+            left: 50%;
+            transform: translateX(-50%) translateY(10px) scale(0.95);
+            background: rgba(7, 21, 34, 0.95);
+            border: 1px solid rgba(103, 232, 249, 0.5);
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 12px;
+            width: max-content;
+            max-width: 260px;
+            text-align: center;
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 100;
         }
-        .cmd-circle:hover::after { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+        
+        .cmd-circle:hover .cmd-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0) scale(1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(103, 232, 249, 0.3);
+        }
+
+        .cmd-tooltip h4 {
+            color: var(--primary);
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(103, 232, 249, 0.2);
+            padding-bottom: 4px;
+        }
+
+        .cmd-tooltip p {
+            font-size: 0.8rem;
+            color: rgba(224, 247, 255, 0.7);
+            line-height: 1.4;
+            white-space: normal;
+        }
+
 
         /* =========================================================
            ВАРИАНТ 2: ДАШБОРД (ПАНЕЛЬ СЛЕВА)
            ========================================================= */
         #layout-dashboard { justify-content: center; align-items: center; padding: 40px 20px; }
         .d-grid { display: grid; grid-template-columns: 340px 1fr; gap: 2rem; max-width: 1400px; width: 100%; height: auto; }
-        .d-hot-panel { border-radius: 20px; padding: 2rem 1.5rem; display: flex; flex-direction: column; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5); }
+        .d-hot-panel { border-radius: 20px; padding: 2rem 1.5rem; display: flex; flex-direction: column; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5); overflow: hidden; }
         .d-title { font-size: 2.2rem; font-weight: 900; letter-spacing: 1px; margin-bottom: 0.5rem; }
         .d-title span { color: var(--primary); }
         .d-subtitle { color: rgba(224, 247, 255, 0.6); font-size: 0.9rem; line-height: 1.4; margin-bottom: 2rem; }
         .d-actions { display: flex; flex-direction: column; gap: 0.8rem; margin-top: auto; }
-        .d-hot-btn { border-radius: 14px; padding: 1rem; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; text-transform: uppercase; font-size: 0.95rem; }
-        .d-hot-btn:hover { transform: translateY(-4px); background: rgba(16, 185, 129, 0.15); }
+        .d-hot-btn { border-radius: 14px; padding: 1rem; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; text-transform: uppercase; font-size: 0.95rem; overflow: hidden; }
+        .d-hot-btn:hover { transform: translateY(-4px); }
         .d-hot-btn svg { width: 20px; height: 20px; transition: 0.3s; }
         .d-hot-btn:hover svg { transform: scale(1.1) rotate(5deg); filter: drop-shadow(0 0 8px var(--primary)); }
 
         .d-content { display: flex; flex-direction: column; justify-content: center; gap: 2rem; }
-        .d-section-title { font-size: 1.1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 15px; }
-        .d-section-title::after { content: ''; flex-grow: 1; height: 1px; background: linear-gradient(90deg, rgba(103, 232, 249, 0.3), transparent); }
 
-        /* В дашборде сайты в сетку */
         .d-sites-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.2rem; }
-        .d-site-card {
-            border-radius: 16px; padding: 1.2rem; display: flex; align-items: center; gap: 1rem; text-align: left;
-        }
+        .d-site-card { padding: 1.2rem; display: flex; align-items: center; gap: 1rem; text-align: left; overflow: hidden; }
         .d-site-card:hover { transform: translateY(-4px) scale(1.02); }
         .d-site-info h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.2rem; }
         .d-site-info p { font-size: 0.8rem; color: rgba(224, 247, 255, 0.6); line-height: 1.3; }
@@ -196,7 +258,6 @@
 
     <div class="particles" id="particles"></div>
 
-    <!-- КНОПКА СМЕНЫ ДИЗАЙНА -->
     <div class="layout-toggle-wrapper">
         <button class="toggle-btn" id="layout-toggle">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -208,7 +269,7 @@
     </div>
 
     <!-- ==========================================
-         ВАРИАНТ 1: ЦЕНТРИРОВАННЫЙ (БЕЗ СКРОЛЛА)
+         ВАРИАНТ 1: ЦЕНТРИРОВАННЫЙ 
          ========================================== -->
     <div id="layout-centered" class="layout-wrapper active">
         <h1 class="main-title-center">СТРОЙ/УБИВАЙ</h1>
@@ -234,7 +295,6 @@
             </div>
         </div>
 
-        <!-- Красивый разделитель -->
         <div class="neon-divider">
             <div class="line"></div>
             <div class="text">Сайты</div>
@@ -272,7 +332,6 @@
             </a>
         </div>
 
-        <!-- Красивый разделитель -->
         <div class="neon-divider">
             <div class="line"></div>
             <div class="text">Игровые команды</div>
@@ -280,17 +339,33 @@
         </div>
 
         <div class="c-cmd-row">
-            <a href="https://stroiubivai.ucoz.net/cmd/build.html" class="glass-btn cmd-circle" data-tooltip="Перейти в Билд">
+            <a href="https://stroiubivai.ucoz.net/cmd/build.html" class="glass-btn cmd-circle">
                 <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                <div class="cmd-tooltip">
+                    <h4>Режим Билд</h4>
+                    <p>Строй свою базу, ставь маники и улучшай оборону без риска быть убитым.</p>
+                </div>
             </a>
-            <a href="https://stroiubivai.ucoz.net/cmd/pvp.html" class="glass-btn cmd-circle" data-tooltip="Перейти в ПВП">
+            <a href="https://stroiubivai.ucoz.net/cmd/pvp.html" class="glass-btn cmd-circle">
                 <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"></path><path d="M13 19l6-6"></path><path d="M16 16l4 4"></path><path d="M19 21l2-2"></path></svg>
+                <div class="cmd-tooltip">
+                    <h4>Режим ПВП</h4>
+                    <p>Сражайся с другими игроками, рейди чужие базы и доминируй на сервере.</p>
+                </div>
             </a>
-            <a href="https://stroiubivai.ucoz.net/cmd/ps_shop.html" class="glass-btn cmd-circle" data-tooltip="Открыть PointShop">
+            <a href="https://stroiubivai.ucoz.net/cmd/ps_shop.html" class="glass-btn cmd-circle">
                 <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                <div class="cmd-tooltip">
+                    <h4>Магазин PointShop</h4>
+                    <p>Покупай скины, трейлы, аксессуары и выделяйся среди других игроков.</p>
+                </div>
             </a>
-            <a href="https://stroiubivai.ucoz.net/cmd/menuon.html" class="glass-btn cmd-circle" data-tooltip="Настройки Сервера">
+            <a href="https://stroiubivai.ucoz.net/cmd/menuon.html" class="glass-btn cmd-circle">
                 <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <div class="cmd-tooltip">
+                    <h4>Настройки Сервера</h4>
+                    <p>Удобное меню для биндов, настройки интерфейса и оптимизации игры.</p>
+                </div>
             </a>
         </div>
     </div>
@@ -368,17 +443,33 @@
                 <div>
                     <div class="d-section-title">Игровые команды</div>
                     <div class="d-cmd-row">
-                        <a href="https://stroiubivai.ucoz.net/cmd/build.html" class="glass-btn cmd-circle" data-tooltip="Перейти в режим Билда">
+                        <a href="https://stroiubivai.ucoz.net/cmd/build.html" class="glass-btn cmd-circle">
                             <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                            <div class="cmd-tooltip">
+                                <h4>Режим Билд</h4>
+                                <p>Строй свою базу, ставь маники и улучшай оборону без риска быть убитым.</p>
+                            </div>
                         </a>
-                        <a href="https://stroiubivai.ucoz.net/cmd/pvp.html" class="glass-btn cmd-circle" data-tooltip="Перейти в режим ПВП">
+                        <a href="https://stroiubivai.ucoz.net/cmd/pvp.html" class="glass-btn cmd-circle">
                             <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"></path><path d="M13 19l6-6"></path><path d="M16 16l4 4"></path><path d="M19 21l2-2"></path></svg>
+                            <div class="cmd-tooltip">
+                                <h4>Режим ПВП</h4>
+                                <p>Сражайся с другими игроками, рейди чужие базы и доминируй на сервере.</p>
+                            </div>
                         </a>
-                        <a href="https://stroiubivai.ucoz.net/cmd/ps_shop.html" class="glass-btn cmd-circle" data-tooltip="Открыть PointShop (Магазин)">
+                        <a href="https://stroiubivai.ucoz.net/cmd/ps_shop.html" class="glass-btn cmd-circle">
                             <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                            <div class="cmd-tooltip">
+                                <h4>Магазин PointShop</h4>
+                                <p>Покупай скины, трейлы, аксессуары и выделяйся среди других игроков.</p>
+                            </div>
                         </a>
-                        <a href="https://stroiubivai.ucoz.net/cmd/menuon.html" class="glass-btn cmd-circle" data-tooltip="Настройки Сервера">
+                        <a href="https://stroiubivai.ucoz.net/cmd/menuon.html" class="glass-btn cmd-circle">
                             <svg class="content-relative" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            <div class="cmd-tooltip">
+                                <h4>Настройки Сервера</h4>
+                                <p>Удобное меню для биндов, настройки интерфейса и оптимизации игры.</p>
+                            </div>
                         </a>
                     </div>
                 </div>
